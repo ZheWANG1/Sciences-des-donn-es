@@ -13,7 +13,6 @@ Année: LU3IN026 - semestre 2 - 2021-2022, Sorbonne Université
 import numpy as np
 import pandas as pd
 import copy
-import math
 
 # ---------------------------
 # ------------------------ A COMPLETER :
@@ -403,25 +402,27 @@ class ClassifierPerceptronKernel(Classifier):
 
     # ---------------------------
 class ClassifierMultiOAA(Classifier) : 
-    def  __init__(self , classif) :
-        self.classif = classif 
-        self.classifs = []
+    def  __init__(self , els) :
+        self.els =els 
+        self.classifier = []
 
-    def train( self, desc_set , label_set) : 
-        self.labels = np.unique(label_set)
+    def train( self, desc_set , label_set, niter_max= 100, seuil = 0.0001) : 
+        self.ally = np.unique(label_set)
         
-        for lab in self.labels : 
-            new_classif = copy.deepcopy(self.classif)
-            new_label_set = np.where(label_set == lab, 1 ,-1)
-            new_classif.train(desc_set, new_label_set)
-            self.classifs.append(new_classif)
-
+        for i in range(len(self.ally)) : 
+            self.classifier.append(copy.deepcopy(self.els))
+        for j in range(len(self.ally)):
+            tmp = np.where(label_set == self.ally[j], 1 ,-1)
+            self.classifier[j].train(desc_set, tmp)
             
-    def score(self, x):
-        return [c.score(x) for c in self.classifs]
+    def score(self, x) : 
+        return [cl.score(x) for cl in self.classifier]
     
-    def predict(self , x) :
-        return self.labels[np.argmax(self.score(x))]
+    def predict(self , x) : 
+        """ rend la prediction sur x (soit -1 ou soit +1)
+            x: une description
+        """
+        return self.ally[np.argmax(self.score(x))]
     
 # ---------------------------
 class Perceptron_MC(Classifier):
@@ -540,48 +541,3 @@ class ClassifierADALINE(Classifier):
             x: une description
         """
         return 1 if self.score(x) >= 0 else -1
-
-def classe_majoritaire(Y):
-    """ Y : (array) : array de labels
-        rend la classe majoritaire ()
-    """
-    dict = {}
-    for i in Y:
-        if i in dict:
-            dict[i] += 1
-        else:
-            dict[i] = 1
-    
-    return max(dict, key=dict.get)
-
-def shannon(P):
-    """ list[Number] -> float
-        Hypothèse: la somme des nombres de P vaut 1
-        P correspond à une distribution de probabilité
-        rend la valeur de l'entropie de Shannon correspondante
-    """
-    size = len(P)
-    if(size == 1):
-        return 0
-    
-    sum = 0
-    for i in P:
-        if i != 0:
-            sum -= i * math.log(i)
-    return sum
-
-def entropie(Y):
-    """ Y : (array) : ensemble de labels de classe
-        rend l'entropie de l'ensemble Y
-    """
-    dict = {}
-    for i in Y:
-        if i in dict:
-            dict[i] += 1
-        else:
-            dict[i] = 1
-    
-    size = len(Y)
-    list = [dict[i]/size for i in dict]
-    
-    return shannon(list)
